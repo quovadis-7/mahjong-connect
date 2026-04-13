@@ -28,7 +28,7 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies (skip postinstall scripts)
-        run: npm install --no-audit --no-fund --ignore-scripts
+        run: npm ci --ignore-scripts
         timeout-minutes: 3
 
       - name: Setup esbuild binary (required by Vite)
