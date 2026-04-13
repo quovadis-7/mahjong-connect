@@ -52,7 +52,7 @@ export function Card({ tile, cardConfig, onClick }: CardProps) {
 
   return (
     <div
-      className={`card-wrapper transition-[opacity,visibility] duration-500 ${
+      className={`card-wrapper h-full w-full transition-[opacity,visibility] duration-500 ${
         tile.isMatched ? 'invisible opacity-0' : 'cursor-pointer'
       }`}
       onClick={handleClick}
