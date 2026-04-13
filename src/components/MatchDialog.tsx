@@ -25,7 +25,7 @@ export function MatchDialog({ cardConfig, onConfirm }: MatchDialogProps) {
         {/* Image */}
         <div className="w-28 h-28 rounded-xl overflow-hidden bg-rose-50 flex items-center justify-center shadow-inner border border-rose-100">
           <img
-            src={cardConfig.imagePath}
+            src={`${import.meta.env.BASE_URL}${cardConfig.imagePath.replace(/^\//, '')}`}
             alt=""
             className="w-full h-full object-contain p-2"
           />
