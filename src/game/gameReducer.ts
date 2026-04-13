@@ -6,6 +6,7 @@ export type GameAction =
   | { type: 'START_GAME'; payload: { boardSize: BoardSize } }
   | { type: 'FLIP_TILE'; payload: { tileId: number } }
   | { type: 'CONFIRM_MATCH' }
+  | { type: 'CLEAR_MISMATCH' }
   | { type: 'RESTART' }
 
 export const initialState: GameState = {
@@ -14,6 +15,7 @@ export const initialState: GameState = {
   tiles: [],
   flipped: null,
   pendingMatch: null,
+  pendingMismatch: null,
 }
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
@@ -26,11 +28,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         tiles: initTiles(CARDS, boardSize),
         flipped: null,
         pendingMatch: null,
+        pendingMismatch: null,
       }
     }
 
     case 'FLIP_TILE': {
-      if (state.pendingMatch !== null) return state
+      if (state.pendingMatch !== null || state.pendingMismatch !== null) return state
 
       const { tileId } = action.payload
       const tile = state.tiles[tileId]
@@ -60,7 +63,13 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
-      return { ...state, tiles: newTiles, flipped: tileId }
+      // Non-match: keep both face-up briefly, then flip back via CLEAR_MISMATCH
+      return {
+        ...state,
+        tiles: newTiles,
+        flipped: null,
+        pendingMismatch: { tileId1: state.flipped, tileId2: tileId },
+      }
     }
 
     case 'CONFIRM_MATCH': {
@@ -80,6 +89,18 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         pendingMatch: null,
         phase: allMatched ? 'finished' : 'playing',
       }
+    }
+
+    case 'CLEAR_MISMATCH': {
+      if (!state.pendingMismatch) return state
+
+      const { tileId1, tileId2 } = state.pendingMismatch
+      const newTiles = state.tiles.map(t =>
+        t.tileId === tileId1 || t.tileId === tileId2
+          ? { ...t, isFlipped: false }
+          : t
+      )
+      return { ...state, tiles: newTiles, pendingMismatch: null }
     }
 
     case 'RESTART': {

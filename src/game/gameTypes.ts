@@ -28,4 +28,6 @@ export interface GameState {
   flipped: number | null
   tiles: Tile[]
   pendingMatch: PendingMatch | null
+  /** tileIds of a mismatched pair waiting to flip back */
+  pendingMismatch: { tileId1: number; tileId2: number } | null
 }
