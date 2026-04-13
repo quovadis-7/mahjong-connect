@@ -63,7 +63,7 @@ describe('FLIP_TILE', () => {
     expect(s2.flipped).toBeNull()
   })
 
-  it('sets pendingMismatch when non-matching tile is flipped', () => {
+  it('keeps non-matching tile face-up and updates flipped pointer', () => {
     const s0 = startGame()
     const tiles = s0.tiles
     const id1 = 0
@@ -72,22 +72,29 @@ describe('FLIP_TILE', () => {
     const s1 = gameReducer(s0, { type: 'FLIP_TILE', payload: { tileId: id1 } })
     const s2 = gameReducer(s1, { type: 'FLIP_TILE', payload: { tileId: id2 } })
 
-    expect(s2.flipped).toBeNull()
-    expect(s2.pendingMismatch).toEqual({ tileId1: id1, tileId2: id2 })
-    expect(s2.tiles[id1].isFlipped).toBe(true)
-    expect(s2.tiles[id2].isFlipped).toBe(true)
+    expect(s2.flipped).toBe(id2)
+    expect(s2.tiles[id1].isFlipped).toBe(true) // first tile stays face-up
+    expect(s2.tiles[id2].isFlipped).toBe(true) // second tile stays face-up
     expect(s2.pendingMatch).toBeNull()
   })
 
-  it('blocks flipping when pendingMismatch is active', () => {
+  it('matches a tile flipped earlier even when other non-matching tiles are also face-up', () => {
     const s0 = startGame()
-    const id1 = 0
-    const id2 = s0.tiles.findIndex((t, i) => i !== 0 && t.cardId !== s0.tiles[0].cardId)
-    const s1 = gameReducer(s0, { type: 'FLIP_TILE', payload: { tileId: id1 } })
-    const s2 = gameReducer(s1, { type: 'FLIP_TILE', payload: { tileId: id2 } })
-    const id3 = s0.tiles.findIndex((t, i) => i !== id1 && i !== id2 && !t.isFlipped)
-    const s3 = gameReducer(s2, { type: 'FLIP_TILE', payload: { tileId: id3 } })
-    expect(s3).toBe(s2)
+    const tiles = s0.tiles
+    // Find two pairs: (A, A') and (B, B') where A and B have different cardIds
+    const cardIdA = tiles[0].cardId
+    const idA = tiles.findIndex(t => t.cardId === cardIdA)
+    const idA2 = tiles.findIndex((t, i) => t.cardId === cardIdA && i !== idA)
+    const idB = tiles.findIndex((t, i) => i !== idA && i !== idA2 && t.cardId !== cardIdA)
+
+    // Flip A, then B (no match — B stays face-up), then flip A's pair
+    const s1 = gameReducer(s0, { type: 'FLIP_TILE', payload: { tileId: idA } })
+    const s2 = gameReducer(s1, { type: 'FLIP_TILE', payload: { tileId: idB } })
+    const s3 = gameReducer(s2, { type: 'FLIP_TILE', payload: { tileId: idA2 } })
+
+    // A and A' should match even though B is also face-up
+    expect(s3.pendingMatch).not.toBeNull()
+    expect(s3.pendingMatch?.cardId).toBe(cardIdA)
   })
 })
 
@@ -133,28 +140,6 @@ describe('CONFIRM_MATCH', () => {
   it('is a no-op when pendingMatch is null', () => {
     const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small' } })
     const s1 = gameReducer(s0, { type: 'CONFIRM_MATCH' })
-    expect(s1).toBe(s0)
-  })
-})
-
-describe('CLEAR_MISMATCH', () => {
-  it('flips both mismatched tiles back and clears pendingMismatch', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small' } })
-    const id1 = 0
-    const id2 = s0.tiles.findIndex((t, i) => i !== 0 && t.cardId !== s0.tiles[0].cardId)
-    const s1 = gameReducer(s0, { type: 'FLIP_TILE', payload: { tileId: id1 } })
-    const s2 = gameReducer(s1, { type: 'FLIP_TILE', payload: { tileId: id2 } })
-    const s3 = gameReducer(s2, { type: 'CLEAR_MISMATCH' })
-
-    expect(s3.tiles[id1].isFlipped).toBe(false)
-    expect(s3.tiles[id2].isFlipped).toBe(false)
-    expect(s3.pendingMismatch).toBeNull()
-    expect(s3.flipped).toBeNull()
-  })
-
-  it('is a no-op when pendingMismatch is null', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small' } })
-    const s1 = gameReducer(s0, { type: 'CLEAR_MISMATCH' })
     expect(s1).toBe(s0)
   })
 })

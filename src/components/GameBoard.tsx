@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import type { GameState } from '../game/gameTypes'
 import type { GameAction } from '../game/gameReducer'
 import type { CardConfig } from '../game/gameTypes'
@@ -13,15 +12,7 @@ interface GameBoardProps {
 }
 
 export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
-  const { tiles, pendingMatch, pendingMismatch, boardSize } = state
-
-  useEffect(() => {
-    if (!pendingMismatch) return
-    const timer = setTimeout(() => {
-      dispatch({ type: 'CLEAR_MISMATCH' })
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [pendingMismatch, dispatch])
+  const { tiles, pendingMatch, boardSize } = state
   const cols = getCols(boardSize!)
 
   const cardMap = new Map(cards.map(c => [c.id, c]))
