@@ -1,5 +1,7 @@
 export type BoardSize = 'small' | 'medium' | 'large'
 
+export type GameMode = 'easy' | 'standard'
+
 export interface CardConfig {
   id: number
   imagePath: string
@@ -24,8 +26,11 @@ export type GamePhase = 'selecting' | 'playing' | 'finished'
 export interface GameState {
   phase: GamePhase
   boardSize: BoardSize | null
+  mode: GameMode
   /** tileId of the currently "waiting" tile (first flip, not yet matched) */
   flipped: number | null
   tiles: Tile[]
   pendingMatch: PendingMatch | null
+  /** standard mode: tileIds of a mismatched pair waiting to flip back */
+  pendingMismatch: { tileId1: number; tileId2: number } | null
 }

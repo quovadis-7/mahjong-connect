@@ -11,8 +11,8 @@ export default function App() {
   if (state.phase === 'selecting') {
     return (
       <SelectScreen
-        onSelect={boardSize =>
-          dispatch({ type: 'START_GAME', payload: { boardSize } })
+        onSelect={(boardSize, mode) =>
+          dispatch({ type: 'START_GAME', payload: { boardSize, mode } })
         }
       />
     )

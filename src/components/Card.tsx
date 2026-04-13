@@ -4,6 +4,7 @@ interface CardProps {
   tile: Tile
   cardConfig: CardConfig
   onClick: (tileId: number) => void
+  onZoom?: (imagePath: string) => void
 }
 
 function CardBack() {
@@ -43,7 +44,7 @@ function CardBack() {
   )
 }
 
-export function Card({ tile, cardConfig, onClick }: CardProps) {
+export function Card({ tile, cardConfig, onClick, onZoom }: CardProps) {
   const handleClick = () => {
     if (!tile.isMatched && !tile.isFlipped) {
       onClick(tile.tileId)
@@ -63,12 +64,21 @@ export function Card({ tile, cardConfig, onClick }: CardProps) {
           <CardBack />
         </div>
         {/* Front face */}
-        <div className="card-face card-front bg-white shadow-md flex items-center justify-center p-2">
+        <div className="card-face card-front bg-white shadow-md flex items-center justify-center p-2 group/front">
           <img
             src={cardConfig.imagePath}
             alt=""
             className="w-full h-full object-contain"
           />
+          {onZoom && (
+            <button
+              className="absolute bottom-1 right-1 bg-white/80 hover:bg-white rounded-full w-5 h-5 flex items-center justify-center text-rose-400 hover:text-rose-600 shadow opacity-0 group-hover/front:opacity-100 transition-opacity text-xs"
+              onClick={e => { e.stopPropagation(); onZoom(cardConfig.imagePath) }}
+              title="放大查看"
+            >
+              ⊕
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react'
 import type { GameState } from '../game/gameTypes'
 import type { GameAction } from '../game/gameReducer'
 import type { CardConfig } from '../game/gameTypes'
 import { getCols } from '../game/boardUtils'
 import { Card } from './Card'
 import { MatchDialog } from './MatchDialog'
+import { ImageZoomDialog } from './ImageZoomDialog'
 
 interface GameBoardProps {
   state: GameState
@@ -12,8 +14,17 @@ interface GameBoardProps {
 }
 
 export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
-  const { tiles, pendingMatch, boardSize } = state
+  const { tiles, pendingMatch, pendingMismatch, boardSize } = state
   const cols = getCols(boardSize!)
+
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null)
+
+  // Standard mode: flip mismatched tiles back after 800ms
+  useEffect(() => {
+    if (!pendingMismatch) return
+    const timer = setTimeout(() => dispatch({ type: 'CLEAR_MISMATCH' }), 800)
+    return () => clearTimeout(timer)
+  }, [pendingMismatch, dispatch])
 
   const cardMap = new Map(cards.map(c => [c.id, c]))
   const matchedCount = tiles.filter(t => t.isMatched).length / 2
@@ -32,15 +43,9 @@ export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
       <div className="text-center">
         <h2 className="font-mashan text-3xl text-rose-700 mb-1">专属记忆游戏</h2>
         <div className="flex items-center justify-center gap-2">
-          <span className="font-kuaile text-rose-500 text-sm">
-            已找到
-          </span>
-          <span className="font-kuaile text-rose-700 text-lg font-bold">
-            {matchedCount}
-          </span>
-          <span className="font-kuaile text-rose-500 text-sm">
-            / {totalPairs} 对
-          </span>
+          <span className="font-kuaile text-rose-500 text-sm">已找到</span>
+          <span className="font-kuaile text-rose-700 text-lg font-bold">{matchedCount}</span>
+          <span className="font-kuaile text-rose-500 text-sm">/ {totalPairs} 对</span>
         </div>
         {/* Progress bar */}
         <div className="mt-2 w-48 h-2 bg-rose-100 rounded-full overflow-hidden mx-auto">
@@ -60,9 +65,8 @@ export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
               <Card
                 tile={tile}
                 cardConfig={config}
-                onClick={tileId =>
-                  dispatch({ type: 'FLIP_TILE', payload: { tileId } })
-                }
+                onClick={tileId => dispatch({ type: 'FLIP_TILE', payload: { tileId } })}
+                onZoom={setZoomedImage}
               />
             </div>
           )
@@ -75,6 +79,11 @@ export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
           cardConfig={pendingCard}
           onConfirm={() => dispatch({ type: 'CONFIRM_MATCH' })}
         />
+      )}
+
+      {/* Image zoom */}
+      {zoomedImage && (
+        <ImageZoomDialog imagePath={zoomedImage} onClose={() => setZoomedImage(null)} />
       )}
     </div>
   )
