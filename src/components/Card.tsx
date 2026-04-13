@@ -66,14 +66,14 @@ export function Card({ tile, cardConfig, onClick, onZoom }: CardProps) {
         {/* Front face */}
         <div className="card-face card-front bg-white shadow-md flex items-center justify-center p-2 group/front">
           <img
-            src={cardConfig.imagePath}
+            src={`${import.meta.env.BASE_URL}${cardConfig.imagePath.replace(/^\//, '')}`}
             alt=""
             className="w-full h-full object-contain"
           />
           {onZoom && (
             <button
               className="absolute bottom-1 right-1 bg-white/80 hover:bg-white rounded-full w-5 h-5 flex items-center justify-center text-rose-400 hover:text-rose-600 shadow opacity-0 group-hover/front:opacity-100 transition-opacity text-xs"
-              onClick={e => { e.stopPropagation(); onZoom(cardConfig.imagePath) }}
+              onClick={e => { e.stopPropagation(); onZoom(`${import.meta.env.BASE_URL}${cardConfig.imagePath.replace(/^\//, '')}`) }}
               title="放大查看"
             >
               ⊕
