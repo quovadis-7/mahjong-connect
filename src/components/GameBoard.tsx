@@ -39,6 +39,16 @@ export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-rose-50 to-pink-100 flex flex-col items-center px-4 py-8 gap-6">
+      {/* Back button */}
+      <div className="w-full max-w-4xl flex">
+        <button
+          onClick={() => dispatch({ type: 'RESTART' })}
+          className="flex items-center gap-1 font-kuaile text-rose-400 hover:text-rose-600 text-sm transition-colors"
+        >
+          ← 重新选择
+        </button>
+      </div>
+
       {/* Header */}
       <div className="text-center">
         <h2 className="font-mashan text-3xl text-rose-700 mb-1">专属记忆游戏</h2>
