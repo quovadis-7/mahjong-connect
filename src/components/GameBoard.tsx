@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { GameState } from '../game/gameTypes'
 import type { GameAction } from '../game/gameReducer'
-import type { CardConfig } from '../game/gameTypes'
 import { getCols } from '../game/boardUtils'
+import { IMAGE_CONTENTS } from '../data/imageContent'
 import { Card } from './Card'
 import { MatchDialog } from './MatchDialog'
 import { ImageZoomDialog } from './ImageZoomDialog'
@@ -10,10 +10,9 @@ import { ImageZoomDialog } from './ImageZoomDialog'
 interface GameBoardProps {
   state: GameState
   dispatch: React.Dispatch<GameAction>
-  cards: CardConfig[]
 }
 
-export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
+export function GameBoard({ state, dispatch }: GameBoardProps) {
   const { tiles, pendingMatch, pendingMismatch, boardSize } = state
   const cols = getCols(boardSize!)
 
@@ -26,7 +25,7 @@ export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
     return () => clearTimeout(timer)
   }, [pendingMismatch, dispatch])
 
-  const cardMap = new Map(cards.map(c => [c.id, c]))
+  const cardMap = new Map(IMAGE_CONTENTS.map(c => [c.id, c]))
   const matchedCount = tiles.filter(t => t.isMatched).length / 2
   const totalPairs = tiles.length / 2
 
@@ -88,6 +87,7 @@ export function GameBoard({ state, dispatch, cards }: GameBoardProps) {
         <MatchDialog
           cardConfig={pendingCard}
           onConfirm={() => dispatch({ type: 'CONFIRM_MATCH' })}
+          onZoom={setZoomedImage}
         />
       )}
 
