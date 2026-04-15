@@ -1,10 +1,11 @@
 import type { Tile, CardConfig } from '../game/gameTypes'
+import { getImageUrl } from '../data/imageContent'
 
 interface CardProps {
   tile: Tile
   cardConfig: CardConfig
   onClick: (tileId: number) => void
-  onZoom?: (imagePath: string) => void
+  onZoom?: (imageUrl: string) => void
 }
 
 function CardBack() {
@@ -17,13 +18,11 @@ function CardBack() {
       <rect width="75" height="100" rx="6" fill="#c2185b" />
       <rect x="4" y="4" width="67" height="92" rx="5" fill="none" stroke="#f48fb1" strokeWidth="1.5" />
       <rect x="8" y="8" width="59" height="84" rx="4" fill="none" stroke="#f48fb1" strokeWidth="0.8" opacity="0.5" />
-      {/* Center heart */}
       <path
         d="M37.5 62 C37.5 62 18 48 18 36 A12 12 0 0 1 37.5 30 A12 12 0 0 1 57 36 C57 48 37.5 62 37.5 62Z"
         fill="#f48fb1"
         opacity="0.9"
       />
-      {/* Corner hearts */}
       {[
         [14, 16], [61, 16], [14, 84], [61, 84],
       ].map(([cx, cy], i) => (
@@ -34,7 +33,6 @@ function CardBack() {
           opacity="0.7"
         />
       ))}
-      {/* Decorative dots */}
       {[
         [37, 16], [37, 84], [8, 50], [67, 50],
       ].map(([cx, cy], i) => (
@@ -51,6 +49,8 @@ export function Card({ tile, cardConfig, onClick, onZoom }: CardProps) {
     }
   }
 
+  const imageUrl = getImageUrl(cardConfig.id)
+
   return (
     <div
       className={`card-wrapper h-full w-full transition-[opacity,visibility] duration-500 ${
@@ -66,14 +66,15 @@ export function Card({ tile, cardConfig, onClick, onZoom }: CardProps) {
         {/* Front face */}
         <div className="card-face card-front bg-white shadow-md flex items-center justify-center p-2 group/front">
           <img
-            src={`${import.meta.env.BASE_URL}${cardConfig.imagePath.replace(/^\//, '')}`}
+            src={imageUrl}
             alt=""
-            className="w-full h-full object-contain"
+            className="w-full h-full object-contain cursor-zoom-in"
+            onClick={e => { e.stopPropagation(); onZoom?.(imageUrl) }}
           />
           {onZoom && (
             <button
               className="absolute bottom-1 right-1 bg-white/80 hover:bg-white rounded-full w-5 h-5 flex items-center justify-center text-rose-400 hover:text-rose-600 shadow opacity-0 group-hover/front:opacity-100 transition-opacity text-xs"
-              onClick={e => { e.stopPropagation(); onZoom(`${import.meta.env.BASE_URL}${cardConfig.imagePath.replace(/^\//, '')}`) }}
+              onClick={e => { e.stopPropagation(); onZoom(imageUrl) }}
               title="放大查看"
             >
               ⊕
