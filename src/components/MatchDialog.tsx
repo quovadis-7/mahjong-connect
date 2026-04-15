@@ -1,11 +1,15 @@
 import type { CardConfig } from '../game/gameTypes'
+import { getImageUrl } from '../data/imageContent'
 
 interface MatchDialogProps {
   cardConfig: CardConfig
   onConfirm: () => void
+  onZoom: (imageUrl: string) => void
 }
 
-export function MatchDialog({ cardConfig, onConfirm }: MatchDialogProps) {
+export function MatchDialog({ cardConfig, onConfirm, onZoom }: MatchDialogProps) {
+  const imageUrl = getImageUrl(cardConfig.id)
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
@@ -22,12 +26,13 @@ export function MatchDialog({ cardConfig, onConfirm }: MatchDialogProps) {
           <span className="text-rose-300 text-xl">✦</span>
         </div>
 
-        {/* Image */}
+        {/* Image — 点击放大 */}
         <div className="w-28 h-28 rounded-xl overflow-hidden bg-rose-50 flex items-center justify-center shadow-inner border border-rose-100">
           <img
-            src={`${import.meta.env.BASE_URL}${cardConfig.imagePath.replace(/^\//, '')}`}
+            src={imageUrl}
             alt=""
-            className="w-full h-full object-contain p-2"
+            className="w-full h-full object-contain p-2 cursor-zoom-in"
+            onClick={e => { e.stopPropagation(); onZoom(imageUrl) }}
           />
         </div>
 
