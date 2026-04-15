@@ -15,7 +15,7 @@ const OPTIONS: { size: BoardSize; label: string; sub: string; tiles: string }[] 
 export function SelectScreen({ onSelect }: SelectScreenProps) {
   const [input, setInput] = useState('')
   const [attempted, setAttempted] = useState(false)
-  const [mode, setMode] = useState<GameMode>('easy')
+  const [mode, setMode] = useState<GameMode>('standard')
 
   const unlocked = input === PASSCODE
   const showError = attempted && !unlocked
