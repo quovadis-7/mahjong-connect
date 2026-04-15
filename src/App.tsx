@@ -1,7 +1,7 @@
 import { useReducer } from 'react'
 import { gameReducer, initialState } from './game/gameReducer'
-import { CARDS } from './data/cards'
 import { SelectScreen } from './components/SelectScreen'
+import { LoadingScreen } from './components/LoadingScreen'
 import { GameBoard } from './components/GameBoard'
 import { FinishLetter } from './components/FinishLetter'
 
@@ -18,9 +18,18 @@ export default function App() {
     )
   }
 
+  if (state.phase === 'loading') {
+    return (
+      <LoadingScreen
+        imageIds={state.selectedImageIds}
+        onLoaded={() => dispatch({ type: 'IMAGES_LOADED' })}
+      />
+    )
+  }
+
   if (state.phase === 'finished') {
     return <FinishLetter onRestart={() => dispatch({ type: 'RESTART' })} />
   }
 
-  return <GameBoard state={state} dispatch={dispatch} cards={CARDS} />
+  return <GameBoard state={state} dispatch={dispatch} />
 }
