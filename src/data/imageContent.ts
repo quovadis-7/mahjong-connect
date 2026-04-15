@@ -1,6 +1,6 @@
 // src/data/imageContent.ts
 
-export const R2_BASE = 'https://assets.soul-portrait.top/soul-portrait/mahjong-connect/pic'
+export const R2_BASE = 'https://assets.soul-portrait.top/mahjong-connect/pic'
 
 export interface ImageContent {
   id: string        // '01' ~ '35'
