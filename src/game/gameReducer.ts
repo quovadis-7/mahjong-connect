@@ -1,8 +1,9 @@
 import type { GameState, BoardSize, GameMode } from './gameTypes'
-import { initTiles, getRandomImageIds, getPairCount } from './boardUtils'
+import { getRandomImageIds, initTiles, getPairCount } from './boardUtils'
 
 export type GameAction =
   | { type: 'START_GAME'; payload: { boardSize: BoardSize; mode: GameMode } }
+  | { type: 'IMAGES_LOADED' }
   | { type: 'FLIP_TILE'; payload: { tileId: number } }
   | { type: 'CONFIRM_MATCH' }
   | { type: 'CLEAR_MISMATCH' }
@@ -11,7 +12,8 @@ export type GameAction =
 export const initialState: GameState = {
   phase: 'selecting',
   boardSize: null,
-  mode: 'easy',
+  mode: 'standard',
+  selectedImageIds: [],
   tiles: [],
   flipped: null,
   pendingMatch: null,
@@ -22,14 +24,25 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START_GAME': {
       const { boardSize, mode } = action.payload
+      const pairCount = getPairCount(boardSize)
+      const selectedImageIds = getRandomImageIds(pairCount)
       return {
-        phase: 'playing',
+        phase: 'loading',
         boardSize,
         mode,
-        tiles: initTiles(getRandomImageIds(getPairCount(boardSize))),
+        selectedImageIds,
+        tiles: [],
         flipped: null,
         pendingMatch: null,
         pendingMismatch: null,
+      }
+    }
+
+    case 'IMAGES_LOADED': {
+      return {
+        ...state,
+        phase: 'playing',
+        tiles: initTiles(state.selectedImageIds),
       }
     }
 
@@ -44,7 +57,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         t.tileId === tileId ? { ...t, isFlipped: true } : t
       )
 
-      // Search ALL currently face-up unmatched tiles for a matching cardId
       const matchingTile = state.tiles.find(
         t => t.tileId !== tileId && t.isFlipped && !t.isMatched && t.cardId === tile.cardId
       )
@@ -62,9 +74,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
-      // No match found
       if (state.mode === 'standard' && state.flipped !== null) {
-        // Standard mode: flip both back after a delay
         return {
           ...state,
           tiles: newTiles,
@@ -73,7 +83,6 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         }
       }
 
-      // Easy mode (or first flip in standard mode): tile stays face-up
       return { ...state, tiles: newTiles, flipped: tileId }
     }
 

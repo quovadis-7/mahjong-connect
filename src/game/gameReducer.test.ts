@@ -2,26 +2,72 @@ import { describe, it, expect } from 'vitest'
 import { gameReducer, initialState } from './gameReducer'
 import type { GameState } from './gameTypes'
 
+// 辅助：START_GAME → IMAGES_LOADED → 得到 playing 状态
+function startGame(size: 'small' | 'medium' | 'large' = 'small') {
+  const loading = gameReducer(initialState, {
+    type: 'START_GAME',
+    payload: { boardSize: size, mode: 'easy' },
+  })
+  return gameReducer(loading, { type: 'IMAGES_LOADED' })
+}
+
+function startStandard() {
+  const loading = gameReducer(initialState, {
+    type: 'START_GAME',
+    payload: { boardSize: 'small', mode: 'standard' },
+  })
+  return gameReducer(loading, { type: 'IMAGES_LOADED' })
+}
+
 describe('START_GAME', () => {
-  it('transitions to playing phase with correct board', () => {
+  it('transitions to loading phase with selected image ids', () => {
     const state = gameReducer(initialState, {
       type: 'START_GAME',
       payload: { boardSize: 'small', mode: 'easy' },
     })
-    expect(state.phase).toBe('playing')
+    expect(state.phase).toBe('loading')
     expect(state.boardSize).toBe('small')
     expect(state.mode).toBe('easy')
-    expect(state.tiles).toHaveLength(36)
+    expect(state.selectedImageIds).toHaveLength(18)
+    expect(state.tiles).toHaveLength(0)
     expect(state.flipped).toBeNull()
     expect(state.pendingMatch).toBeNull()
   })
 })
 
-describe('FLIP_TILE (easy mode)', () => {
-  function startGame(size: 'small' | 'medium' | 'large' = 'small') {
-    return gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: size, mode: 'easy' } })
-  }
+describe('IMAGES_LOADED', () => {
+  it('transitions to playing phase with correct board', () => {
+    const loading = gameReducer(initialState, {
+      type: 'START_GAME',
+      payload: { boardSize: 'small', mode: 'easy' },
+    })
+    const playing = gameReducer(loading, { type: 'IMAGES_LOADED' })
+    expect(playing.phase).toBe('playing')
+    expect(playing.tiles).toHaveLength(36)
+    expect(playing.flipped).toBeNull()
+    expect(playing.pendingMatch).toBeNull()
+  })
 
+  it('creates medium board with 48 tiles', () => {
+    const loading = gameReducer(initialState, {
+      type: 'START_GAME',
+      payload: { boardSize: 'medium', mode: 'easy' },
+    })
+    const playing = gameReducer(loading, { type: 'IMAGES_LOADED' })
+    expect(playing.tiles).toHaveLength(48)
+  })
+
+  it('creates large board with 64 tiles', () => {
+    const loading = gameReducer(initialState, {
+      type: 'START_GAME',
+      payload: { boardSize: 'large', mode: 'easy' },
+    })
+    const playing = gameReducer(loading, { type: 'IMAGES_LOADED' })
+    expect(playing.tiles).toHaveLength(64)
+  })
+})
+
+describe('FLIP_TILE (easy mode)', () => {
   it('flips tile and sets flipped when no tile is waiting', () => {
     const s0 = startGame()
     const s1 = gameReducer(s0, { type: 'FLIP_TILE', payload: { tileId: 0 } })
@@ -41,7 +87,7 @@ describe('FLIP_TILE (easy mode)', () => {
     const s0 = startGame()
     const stateWithPending: GameState = {
       ...s0,
-      pendingMatch: { tileId1: 0, tileId2: 1, cardId: 1 },
+      pendingMatch: { tileId1: 0, tileId2: 1, cardId: '01' },
     }
     const s1 = gameReducer(stateWithPending, { type: 'FLIP_TILE', payload: { tileId: 2 } })
     expect(s1.tiles[2].isFlipped).toBe(false)
@@ -83,7 +129,7 @@ describe('FLIP_TILE (easy mode)', () => {
     const cardIdA = tiles[0].cardId
     const idA = tiles.findIndex(t => t.cardId === cardIdA)
     const idA2 = tiles.findIndex((t, i) => t.cardId === cardIdA && i !== idA)
-    const idB = tiles.findIndex((t, i) => i !== idA && i !== idA2 && t.cardId !== cardIdA)
+    const idB = tiles.findIndex((_t, i) => i !== idA && i !== idA2 && tiles[i].cardId !== cardIdA)
 
     const s1 = gameReducer(s0, { type: 'FLIP_TILE', payload: { tileId: idA } })
     const s2 = gameReducer(s1, { type: 'FLIP_TILE', payload: { tileId: idB } })
@@ -95,10 +141,6 @@ describe('FLIP_TILE (easy mode)', () => {
 })
 
 describe('FLIP_TILE (standard mode)', () => {
-  function startStandard() {
-    return gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small', mode: 'standard' } })
-  }
-
   it('sets pendingMismatch when two non-matching tiles are flipped', () => {
     const s0 = startStandard()
     const tiles = s0.tiles
@@ -126,7 +168,7 @@ describe('FLIP_TILE (standard mode)', () => {
 
 describe('CONFIRM_MATCH', () => {
   it('marks both tiles as matched and clears pendingMatch', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small', mode: 'easy' } })
+    const s0 = startGame()
     const tiles = s0.tiles
     const cardId = tiles[0].cardId
     const id1 = tiles.findIndex(t => t.cardId === cardId)
@@ -143,7 +185,7 @@ describe('CONFIRM_MATCH', () => {
   })
 
   it('transitions to finished when all tiles matched', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small', mode: 'easy' } })
+    const s0 = startGame()
     const cardId = s0.tiles[0].cardId
     const id1 = s0.tiles.findIndex(t => t.cardId === cardId)
     const id2 = s0.tiles.findIndex((t, i) => t.cardId === cardId && i !== id1)
@@ -162,7 +204,7 @@ describe('CONFIRM_MATCH', () => {
   })
 
   it('is a no-op when pendingMatch is null', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small', mode: 'easy' } })
+    const s0 = startGame()
     const s1 = gameReducer(s0, { type: 'CONFIRM_MATCH' })
     expect(s1).toBe(s0)
   })
@@ -170,7 +212,7 @@ describe('CONFIRM_MATCH', () => {
 
 describe('CLEAR_MISMATCH', () => {
   it('flips both mismatched tiles back and clears pendingMismatch', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small', mode: 'standard' } })
+    const s0 = startStandard()
     const id1 = 0
     const id2 = s0.tiles.findIndex((t, i) => i !== 0 && t.cardId !== s0.tiles[0].cardId)
     const s1 = gameReducer(s0, { type: 'FLIP_TILE', payload: { tileId: id1 } })
@@ -184,7 +226,7 @@ describe('CLEAR_MISMATCH', () => {
   })
 
   it('is a no-op when pendingMismatch is null', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small', mode: 'standard' } })
+    const s0 = startStandard()
     const s1 = gameReducer(s0, { type: 'CLEAR_MISMATCH' })
     expect(s1).toBe(s0)
   })
@@ -192,7 +234,11 @@ describe('CLEAR_MISMATCH', () => {
 
 describe('RESTART', () => {
   it('resets state to initial', () => {
-    const s0 = gameReducer(initialState, { type: 'START_GAME', payload: { boardSize: 'small', mode: 'easy' } })
+    const loading = gameReducer(initialState, {
+      type: 'START_GAME',
+      payload: { boardSize: 'small', mode: 'easy' },
+    })
+    const s0 = gameReducer(loading, { type: 'IMAGES_LOADED' })
     const s1 = gameReducer(s0, { type: 'RESTART' })
     expect(s1).toEqual(initialState)
   })
