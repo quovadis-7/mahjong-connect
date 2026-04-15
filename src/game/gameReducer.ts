@@ -1,6 +1,5 @@
 import type { GameState, BoardSize, GameMode } from './gameTypes'
-import { CARDS } from '../data/cards'
-import { initTiles } from './boardUtils'
+import { initTiles, getRandomImageIds, getPairCount } from './boardUtils'
 
 export type GameAction =
   | { type: 'START_GAME'; payload: { boardSize: BoardSize; mode: GameMode } }
@@ -27,7 +26,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         phase: 'playing',
         boardSize,
         mode,
-        tiles: initTiles(CARDS, boardSize),
+        tiles: initTiles(getRandomImageIds(getPairCount(boardSize))),
         flipped: null,
         pendingMatch: null,
         pendingMismatch: null,

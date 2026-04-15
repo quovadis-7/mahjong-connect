@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { shuffle, getPairCount, getCols, initTiles } from './boardUtils'
-import { CARDS } from '../data/cards'
+import { shuffle, getPairCount, getCols, initTiles, getRandomImageIds } from './boardUtils'
+import { IMAGE_CONTENTS } from '../data/imageContent'
 
 describe('shuffle', () => {
   it('returns array with same elements in any order', () => {
@@ -34,42 +34,58 @@ describe('getCols', () => {
   it('returns 8 for large', () => expect(getCols('large')).toBe(8))
 })
 
+describe('getRandomImageIds', () => {
+  it('returns correct count for small', () => {
+    expect(getRandomImageIds(18)).toHaveLength(18)
+  })
+
+  it('returns correct count for medium', () => {
+    expect(getRandomImageIds(24)).toHaveLength(24)
+  })
+
+  it('returns correct count for large', () => {
+    expect(getRandomImageIds(32)).toHaveLength(32)
+  })
+
+  it('returns only valid image ids', () => {
+    const validIds = new Set(IMAGE_CONTENTS.map(c => c.id))
+    getRandomImageIds(18).forEach(id => expect(validIds.has(id)).toBe(true))
+  })
+
+  it('returns no duplicate ids', () => {
+    const ids = getRandomImageIds(32)
+    expect(new Set(ids).size).toBe(32)
+  })
+})
+
 describe('initTiles', () => {
-  it('creates 36 tiles for small (6x6)', () => {
-    expect(initTiles(CARDS, 'small')).toHaveLength(36)
-  })
+  const sampleIds = IMAGE_CONTENTS.slice(0, 18).map(c => c.id)
 
-  it('creates 48 tiles for medium (6x8)', () => {
-    expect(initTiles(CARDS, 'medium')).toHaveLength(48)
-  })
-
-  it('creates 64 tiles for large (8x8)', () => {
-    expect(initTiles(CARDS, 'large')).toHaveLength(64)
+  it('creates 2 tiles per image id', () => {
+    expect(initTiles(sampleIds)).toHaveLength(36)
   })
 
   it('each cardId appears exactly twice', () => {
-    const tiles = initTiles(CARDS, 'small')
-    const counts = new Map<number, number>()
+    const tiles = initTiles(sampleIds)
+    const counts = new Map<string, number>()
     tiles.forEach(t => counts.set(t.cardId, (counts.get(t.cardId) ?? 0) + 1))
     counts.forEach(count => expect(count).toBe(2))
   })
 
   it('all tiles start unflipped and unmatched', () => {
-    const tiles = initTiles(CARDS, 'small')
-    tiles.forEach(t => {
+    initTiles(sampleIds).forEach(t => {
       expect(t.isFlipped).toBe(false)
       expect(t.isMatched).toBe(false)
     })
   })
 
   it('tileIds are sequential from 0', () => {
-    const tiles = initTiles(CARDS, 'small')
+    const tiles = initTiles(sampleIds)
     expect(tiles.map(t => t.tileId)).toEqual(Array.from({ length: 36 }, (_, i) => i))
   })
 
-  it('uses all 32 cards for large board', () => {
-    const tiles = initTiles(CARDS, 'large')
-    const cardIds = new Set(tiles.map(t => t.cardId))
-    expect(cardIds.size).toBe(32)
+  it('creates 64 tiles for 32 image ids', () => {
+    const ids32 = IMAGE_CONTENTS.slice(0, 32).map(c => c.id)
+    expect(initTiles(ids32)).toHaveLength(64)
   })
 })
