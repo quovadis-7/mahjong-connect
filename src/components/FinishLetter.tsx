@@ -1,4 +1,4 @@
-import { LOVE_LETTER } from '../data/letter'
+import { LOVE_LETTER_BODY, LOVE_LETTER_SIGN_OFF } from '../data/letter'
 
 interface FinishLetterProps {
   onRestart: () => void
@@ -29,9 +29,10 @@ export function FinishLetter({ onRestart }: FinishLetterProps) {
           </div>
 
           {/* Letter content */}
-          <p className="font-mashan text-rose-800 text-lg leading-loose whitespace-pre-line">
-            {LOVE_LETTER}
-          </p>
+          <div className="font-mashan text-rose-800 text-lg leading-loose whitespace-pre-line">
+            <p className="whitespace-pre-line">{LOVE_LETTER_BODY}</p>
+            <p className="mt-10 text-right whitespace-pre-line">{LOVE_LETTER_SIGN_OFF}</p>
+          </div>
 
           {/* Bottom decoration */}
           <div className="text-center mt-8">
